@@ -40,19 +40,29 @@ Open **Codex Lid Awake** from Applications, select a duration, then authenticate
 
 ### Windows PowerShell
 
-Run **Windows PowerShell as Administrator**, then from the cloned repository:
+No Git installation, download, `cd`, or execution-policy change is needed.
+
+1. Press the Windows key and type **Windows PowerShell**.
+2. Right-click it, choose **Run as administrator**, then choose **Yes**.
+3. Copy the entire block below, paste it into the blue PowerShell window, and press Enter. Change only `-Hours 2` if you want 1–24 hours.
 
 ```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\windows\CodexLidAwake.ps1 -Action Enable -Hours 2
+$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Enable -Hours 2
 ```
 
-The script records the current AC and battery lid-close actions, sets both to **Do nothing**, and registers a recovery task. It automatically restores the saved values when the duration expires or at the next system startup. Restore early or inspect state with:
+When you see `Enabled...`, you can close the lid. The script records the current AC and battery lid-close actions, sets both to **Do nothing**, and registers a recovery task. It automatically restores the saved values when the duration expires or at the next system startup.
+
+To restore normal lid behavior early, open **Windows PowerShell as Administrator** again and paste this entire block:
 
 ```powershell
-.\windows\CodexLidAwake.ps1 -Action Disable
-.\windows\CodexLidAwake.ps1 -Action Status
+$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Disable
 ```
+
+To check whether it is active, replace `Disable` in the last line with `Status`.
 
 The PowerShell implementation uses the documented `powercfg /setacvalueindex` and `/setdcvalueindex` interfaces for power-scheme settings. [Microsoft documentation](https://learn.microsoft.com/windows-hardware/design/device-experiences/powercfg-command-line-options)
 
@@ -100,19 +110,29 @@ cd codex-lid-awake
 
 ### Windows PowerShell 使用方法
 
-以**管理员身份**打开 Windows PowerShell，进入克隆后的仓库并执行：
+不需要安装 Git、不需要下载压缩包、不需要输入 `cd`，也不需要修改执行策略。
+
+1. 按 Windows 键，输入 **Windows PowerShell**。
+2. 右键点击它，选择“**以管理员身份运行**”，然后点击“是”。
+3. 完整复制下面这一段，粘贴到蓝色 PowerShell 窗口并按回车。只需要按需把最后的 `-Hours 2` 改为 1–24 小时。
 
 ```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\windows\CodexLidAwake.ps1 -Action Enable -Hours 2
+$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Enable -Hours 2
 ```
 
-脚本会保存当前电源计划在接通电源和使用电池时的合盖策略，然后将两者临时设为“不执行任何操作”。它会创建恢复任务，在指定时长结束或下次系统启动时自动还原原始设置。提前还原或查看状态：
+看到 `Enabled...` 后即可合盖。脚本会保存当前电源计划在接通电源和使用电池时的合盖策略，然后将两者临时设为“不执行任何操作”。它会创建恢复任务，在指定时长结束或下次系统启动时自动还原原始设置。
+
+需要提前恢复正常合盖行为时，再次以**管理员身份**打开 Windows PowerShell，完整粘贴下面这一段：
 
 ```powershell
-.\windows\CodexLidAwake.ps1 -Action Disable
-.\windows\CodexLidAwake.ps1 -Action Status
+$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Disable
 ```
+
+若想查看是否仍开启，只需把最后一行的 `Disable` 改成 `Status`。
 
 Windows 版本使用 Microsoft 文档化的 `powercfg /setacvalueindex` 和 `/setdcvalueindex` 接口管理电源计划。[Microsoft 文档](https://learn.microsoft.com/zh-cn/windows-hardware/design/device-experiences/powercfg-command-line-options)
 

@@ -35,16 +35,27 @@ function Get-ActiveSchemeGuid {
     return $match.Value
 }
 
-function Get-LidActionValue {
-    param(
-        [Parameter(Mandatory)] [string]$SchemeGuid,
-        [Parameter(Mandatory)] [ValidateSet('AC', 'DC')] [string]$PowerSource
-    )
+function Get-LidActionValues {
+    param([Parameter(Mandatory)] [string]$SchemeGuid)
 
-    $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$SchemeGuid\$SubgroupGuid\$LidActionGuid"
-    $propertyName = if ($PowerSource -eq 'AC') { 'ACSettingIndex' } else { 'DCSettingIndex' }
-    $setting = Get-ItemProperty -Path $registryPath -Name $propertyName -ErrorAction Stop
-    return [uint32]$setting.$propertyName
+    # Query powercfg instead of the registry: some valid power plans inherit this
+    # setting and therefore do not have an explicit registry key.
+    $result = (& powercfg.exe /query $SchemeGuid $SubgroupGuid $LidActionGuid | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        throw "powercfg could not read the lid-close setting (exit code $LASTEXITCODE)."
+    }
+
+    # The final two hexadecimal indexes in this setting-specific query are always
+    # the current AC and DC values. This avoids depending on localized labels.
+    $indexes = [regex]::Matches($result, '(?i)\b0x([0-9a-f]+)\b')
+    if ($indexes.Count -lt 2) {
+        throw 'powercfg returned an unexpected lid-close setting format.'
+    }
+
+    return [pscustomobject]@{
+        AcValue = [Convert]::ToUInt32($indexes[$indexes.Count - 2].Groups[1].Value, 16)
+        DcValue = [Convert]::ToUInt32($indexes[$indexes.Count - 1].Groups[1].Value, 16)
+    }
 }
 
 function Set-LidActionValue {
@@ -119,8 +130,9 @@ switch ($Action) {
         }
 
         $schemeGuid = Get-ActiveSchemeGuid
-        $acValue = Get-LidActionValue -SchemeGuid $schemeGuid -PowerSource AC
-        $dcValue = Get-LidActionValue -SchemeGuid $schemeGuid -PowerSource DC
+        $savedValues = Get-LidActionValues -SchemeGuid $schemeGuid
+        $acValue = $savedValues.AcValue
+        $dcValue = $savedValues.DcValue
         $restoreAt = (Get-Date).AddHours($Hours)
         $state = [pscustomobject]@{
             SchemeGuid = $schemeGuid
