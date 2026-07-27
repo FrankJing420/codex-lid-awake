@@ -2,102 +2,37 @@
 
 [简体中文](#简体中文) · [English](#english)
 
-Keep a laptop awake, online, and able to continue a long-running Codex task after the lid is closed. macOS and Windows PowerShell implementations are included.
+Keep a Windows or macOS laptop awake and online while its lid is closed, so long-running Codex tasks can continue.
 
 > [!WARNING]
-> This intentionally prevents system sleep. Keep the Mac ventilated, preferably on power, and **never put it in a bag while this is active**. It increases power use and may cause overheating.
-
-## English
-
-### What it does
-
-`Codex Lid Awake` has two native implementations:
-
-- **macOS:** an AppleScript app that toggles the built-in `pmset disablesleep` setting for 1, 2, 4, or 8 hours.
-- **Windows:** an elevated PowerShell script that temporarily changes the active plan's lid-close action to **Do nothing** for a chosen number of hours.
-
-While active, closing the lid does not put the laptop to sleep, so a connected phone hotspot and ongoing Codex work can continue.
-
-The app asks for administrator authentication only when enabling or disabling the setting. A root timer restores normal sleep automatically. The included LaunchDaemon resets the setting to `0` at boot as an additional safety guard.
-
-`disablesleep` is an undocumented `pmset` setting, so test after macOS upgrades and use at your own risk.
-
-### macOS requirements
-
-- macOS with AppleScript and `pmset`
-- An administrator account
-
-### Build and install
-
-```zsh
-git clone https://github.com/FrankJing420/codex-lid-awake.git
-cd codex-lid-awake
-./scripts/build-app.sh
-./scripts/install.sh
-```
-
-Open **Codex Lid Awake** from Applications, select a duration, then authenticate. Open it again to restore normal sleep early.
-
-### Windows PowerShell
-
-No Git installation, download, `cd`, or execution-policy change is needed.
-
-1. Press the Windows key and type **Windows PowerShell**.
-2. Right-click it, choose **Run as administrator**, then choose **Yes**.
-3. Copy the entire block below, paste it into the blue PowerShell window, and press Enter. Change only `-Hours 2` if you want 1–24 hours.
-
-```powershell
-$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Enable -Hours 2
-```
-
-When you see `Enabled...`, you can close the lid. The script records the current AC and battery lid-close actions, sets both to **Do nothing**, and registers a recovery task. It automatically restores the saved values when the duration expires or at the next system startup.
-
-To restore normal lid behavior early, open **Windows PowerShell as Administrator** again and paste this entire block:
-
-```powershell
-$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Disable
-```
-
-To check whether it is active, replace `Disable` in the last line with `Status`.
-
-The PowerShell implementation uses the documented `powercfg /setacvalueindex` and `/setdcvalueindex` interfaces for power-scheme settings. [Microsoft documentation](https://learn.microsoft.com/windows-hardware/design/device-experiences/powercfg-command-line-options)
-
-### Emergency recovery
-
-If the app cannot be opened, restore default lid sleep in Terminal:
-
-```zsh
-sudo pmset -a disablesleep 0
-```
-
-### Uninstall
-
-```zsh
-sudo rm -rf "/Applications/Codex Lid Awake.app"
-sudo launchctl bootout system/local.codex.lidawake-reset
-sudo rm -f /Library/LaunchDaemons/local.codex.lidawake-reset.plist
-```
+> This intentionally prevents system sleep. Keep the laptop ventilated, preferably connected to power, and **never put it in a bag while active**.
 
 ## 简体中文
 
-### 用途
+### Windows：下载安装包即可使用
 
-项目包含两份原生实现：
+[**下载最新版 Windows 安装包（CodexLidAwakeSetup.exe）**](https://github.com/FrankJing420/codex-lid-awake/releases/latest/download/CodexLidAwakeSetup.exe)
 
-- **macOS：**轻量的 AppleScript 工具，在选定的 1、2、4 或 8 小时内开启系统的 `pmset disablesleep`。
-- **Windows：**需要管理员权限的 PowerShell 脚本，临时将当前电源计划的“合盖操作”改为“**不执行任何操作**”。
+支持 64 位 Windows 10 和 Windows 11，不需要安装 PowerShell 脚本、Git 或 .NET。
 
-启用后，笔记本合盖不会进入睡眠，因此手机热点和正在运行的 Codex 任务可以继续工作。
+1. 点击上面的下载链接。
+2. 双击下载的 `CodexLidAwakeSetup.exe`。
+3. 如果 Windows 显示“Windows 已保护你的电脑”，点击“更多信息”，再点击“仍要运行”。这是因为开源安装包目前没有商业代码签名证书。
+4. 按安装向导完成安装。安装结束后软件会自动打开。
+5. 在窗口中选择 1、2、4 或 8 小时，点击“开启合盖联网”。
+6. 看到“已开启”后即可合盖；网络和 Codex 任务会继续运行。
 
-启用和关闭时会要求管理员授权；根权限计时器会在到期时自动恢复正常睡眠。附带的 LaunchDaemon 会在每次开机时把该设置复位为 `0`，避免意外持续禁用睡眠。
+需要提前结束时，再次打开桌面的 **Codex Lid Awake**，点击“恢复正常睡眠”。
 
-`disablesleep` 是未公开文档化的 `pmset` 设置。请在 macOS 升级后自行验证，并自行承担使用风险。
+Windows 版本会：
 
-### macOS 安装
+- 分别保存接通电源和使用电池时原有的合盖设置；
+- 使用 Windows 原生电源 API 将合盖操作临时设为“不执行任何操作”；
+- 在选定时间到期时自动恢复；
+- 若电脑在开启期间重启，在下次开机时自动恢复；
+- 卸载软件前恢复原有设置。
+
+### macOS：构建并安装
 
 ```zsh
 git clone https://github.com/FrankJing420/codex-lid-awake.git
@@ -106,43 +41,82 @@ cd codex-lid-awake
 ./scripts/install.sh
 ```
 
-之后在“应用程序”中打开 **Codex Lid Awake**，选择时长并完成授权；需要提前结束时再次打开该工具即可。
+之后在“应用程序”中打开 **Codex Lid Awake**，选择时长并完成管理员授权。需要提前结束时再次打开即可恢复。
 
-### Windows PowerShell 使用方法
+macOS 版本使用 `pmset disablesleep`，并附带定时恢复和开机复位保护。`disablesleep` 是未公开文档化的系统设置，请在 macOS 大版本升级后重新验证。
 
-不需要安装 Git、不需要下载压缩包、不需要输入 `cd`，也不需要修改执行策略。
+### 从源码构建 Windows 版本
 
-1. 按 Windows 键，输入 **Windows PowerShell**。
-2. 右键点击它，选择“**以管理员身份运行**”，然后点击“是”。
-3. 完整复制下面这一段，粘贴到蓝色 PowerShell 窗口并按回车。只需要按需把最后的 `-Hours 2` 改为 1–24 小时。
+需要 .NET 8 SDK：
 
 ```powershell
-$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Enable -Hours 2
+dotnet publish windows/app/CodexLidAwake.csproj `
+  --configuration Release `
+  --runtime win-x64 `
+  --self-contained true `
+  --output windows/publish `
+  -p:PublishSingleFile=true
 ```
 
-看到 `Enabled...` 后即可合盖。脚本会保存当前电源计划在接通电源和使用电池时的合盖策略，然后将两者临时设为“不执行任何操作”。它会创建恢复任务，在指定时长结束或下次系统启动时自动还原原始设置。
+旧版命令行 PowerShell 实现仍保留在 [`windows/CodexLidAwake.ps1`](windows/CodexLidAwake.ps1)，仅供高级用户和源码参考。普通用户应使用安装包。
 
-需要提前恢复正常合盖行为时，再次以**管理员身份**打开 Windows PowerShell，完整粘贴下面这一段：
+### 技术说明
 
-```powershell
-$scriptPath = Join-Path $env:TEMP 'CodexLidAwake.ps1'
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/FrankJing420/codex-lid-awake/main/windows/CodexLidAwake.ps1' -OutFile $scriptPath
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action Disable
-```
+Windows 桌面软件直接调用 Microsoft 的 `PowerGetActiveScheme`、`PowerReadACValueIndex`、`PowerReadDCValueIndex`、`PowerWriteACValueIndex`、`PowerWriteDCValueIndex` 和 `PowerSetActiveScheme` API，不依赖本地化的命令输出或可能缺失的注册表路径。
 
-若想查看是否仍开启，只需把最后一行的 `Disable` 改成 `Status`。
+- [Microsoft：合盖操作及其取值](https://learn.microsoft.com/zh-cn/windows-hardware/customize/power-settings/power-button-and-lid-settings-lid-switch-close-action)
+- [Microsoft：PowerGetActiveScheme](https://learn.microsoft.com/windows/win32/api/powersetting/nf-powersetting-powergetactivescheme)
+- [Microsoft：PowerReadDCValueIndex](https://learn.microsoft.com/windows/win32/api/powrprof/nf-powrprof-powerreaddcvalueindex)
 
-Windows 版本使用 Microsoft 文档化的 `powercfg /setacvalueindex` 和 `/setdcvalueindex` 接口管理电源计划。[Microsoft 文档](https://learn.microsoft.com/zh-cn/windows-hardware/design/device-experiences/powercfg-command-line-options)
-
-### 紧急恢复
-
-若无法打开工具，在终端执行：
+### macOS 紧急恢复
 
 ```zsh
 sudo pmset -a disablesleep 0
 ```
+
+## English
+
+### Windows: install and use
+
+[**Download the latest Windows installer (CodexLidAwakeSetup.exe)**](https://github.com/FrankJing420/codex-lid-awake/releases/latest/download/CodexLidAwakeSetup.exe)
+
+The installer supports 64-bit Windows 10 and Windows 11. Git, .NET, and PowerShell setup are not required.
+
+1. Download and double-click `CodexLidAwakeSetup.exe`.
+2. If Microsoft Defender SmartScreen appears, select **More info**, then **Run anyway**. The open-source installer is not currently signed with a commercial code-signing certificate.
+3. Complete the installer and open **Codex Lid Awake**.
+4. Select 1, 2, 4, or 8 hours, then choose **Enable**.
+5. Open the app again and choose **Restore** if you want normal lid sleep back early.
+
+The Windows app saves both AC and battery lid actions, uses native Windows power APIs to set **Do nothing**, and restores the saved values at the selected time, on the next boot, or during uninstall.
+
+### macOS: build and install
+
+```zsh
+git clone https://github.com/FrankJing420/codex-lid-awake.git
+cd codex-lid-awake
+./scripts/build-app.sh
+./scripts/install.sh
+```
+
+Open **Codex Lid Awake** from Applications, select a duration, and authenticate. Open it again to restore normal sleep early.
+
+The macOS implementation uses the undocumented `pmset disablesleep` setting, with timed and boot-time recovery guards.
+
+### Build the Windows app from source
+
+.NET 8 SDK is required:
+
+```powershell
+dotnet publish windows/app/CodexLidAwake.csproj `
+  --configuration Release `
+  --runtime win-x64 `
+  --self-contained true `
+  --output windows/publish `
+  -p:PublishSingleFile=true
+```
+
+The earlier command-line implementation remains at [`windows/CodexLidAwake.ps1`](windows/CodexLidAwake.ps1) for advanced users and source reference.
 
 ## License
 

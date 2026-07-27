@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>CodexLidAwake</AssemblyName>
+    <RootNamespace>CodexLidAwake</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>FrankJing420</Authors>
+    <Product>Codex Lid Awake</Product>
+    <Description>Keep a Windows laptop awake and online while its lid is closed.</Description>
+  </PropertyGroup>
+</Project>

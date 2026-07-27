@@ -11,7 +11,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SubgroupGuid = '238c9fa8-0aad-41ed-83f4-97be242c8f20' # Power buttons and lid
+$SubgroupGuid = '4f971e89-eebd-4455-a8de-9e59040e7347' # Power buttons and lid
 $LidActionGuid = '5ca83367-6e45-459f-a27b-476b1d01c936'
 $StateDirectory = Join-Path $env:ProgramData 'CodexLidAwake'
 $StatePath = Join-Path $StateDirectory 'state.json'
