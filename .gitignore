@@ -1,6 +1,2 @@
 .DS_Store
 dist/
-release/
-windows/app/bin/
-windows/app/obj/
-windows/publish/
